@@ -5,6 +5,8 @@ import base64
 
 st.set_page_config(layout="wide", page_icon="images/logo.ico")
 
+NEXTFLOW_RUNDIR = "test/data"
+
 COLUMNS = [
     'PARAMETER_TYPE', 'TREATMENTS', 'TARGET', 'PVALUE', 'ADJUSTED_PVALUE', 
     'ESTIMATE', 'LWB', 'UPB', 'STD', 'CASE', 'CONTROL', 'CONFOUNDERS', 
@@ -54,6 +56,7 @@ def columns(data):
 data = load_data()
 
 # Title
+st.image("images/logo.jpg")
 st.title("TarGene Dashboard")
 st.markdown("Welcome to the TarGene visualization interface.")
 # Display the table
