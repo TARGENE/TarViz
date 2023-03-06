@@ -1,6 +1,12 @@
 import pandas as pd
 import os
 
+def result_file(nextflow_rundir):
+    return os.path.join(nextflow_rundir, "preliminary_results.csv")
+
+def raw_data_file(nextflow_rundir):
+    return os.path.join(nextflow_rundir, "results", "tmle_inputs", "final.data.csv")
+
 def load_pipeline_params(config_file):
     in_param_section = False
     params = {}

@@ -5,7 +5,7 @@ Visualization dashboard for TarGene results
 
 In order to forward and display the the app in the browser (workaround taken from the [jupyther notebook config](https://docs.anaconda.com/anaconda/user-guide/tasks/remote-jupyter-notebook/)):
 
-1. Create a SSH tunnel
+1. Create a SSH tunnel from your local machine:
 
 ```bash
 ssh -L 8080:localhost:8080 wild-kb
