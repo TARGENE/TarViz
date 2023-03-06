@@ -5,8 +5,6 @@ import base64
 
 st.set_page_config(layout="wide", page_icon="images/logo.ico")
 
-NEXTFLOW_RUNDIR = "test/data"
-
 COLUMNS = [
     'PARAMETER_TYPE', 'TREATMENTS', 'TARGET', 'PVALUE', 'ADJUSTED_PVALUE', 
     'ESTIMATE', 'LWB', 'UPB', 'STD', 'CASE', 'CONTROL', 'CONFOUNDERS', 

@@ -1,7 +1,8 @@
-from tarviz.utils import load_pipeline_params
+from tarviz.utils import load_pipeline_params, bQTL_list
 import os
 
-PIPELINE_CONFIG_FILE = os.path.join("tests", "data", "nextflow.config")
+NEXTFLOW_RUNDIR = os.path.join("tests", "nextflow_rundir")
+PIPELINE_CONFIG_FILE = os.path.join(NEXTFLOW_RUNDIR, "nextflow.config")
 
 def test_parse_pipeline_params():
     params = load_pipeline_params(PIPELINE_CONFIG_FILE)
@@ -29,3 +30,16 @@ def test_parse_pipeline_params():
         "ENCRYPTED_DATASET": "/exports/igmm/eddie/UK-BioBank-53116/phenotypes/ukb45981.enc_ukb",
         "ENCODING_FILE": "/exports/igmm/eddie/UK-BioBank-53116/phenotypes/encoding.ukb"
     }
+
+def test_bQTL_list():
+    bqtls = bQTL_list(NEXTFLOW_RUNDIR)
+    print(bqtls)
+    assert bqtls == [
+        "rs35405640", 
+        "rs11544037", 
+        "rs961320", 
+        "rs12892296", 
+        "rs10694113", 
+        "rs11994337", 
+        "rs13323956"
+        ]
