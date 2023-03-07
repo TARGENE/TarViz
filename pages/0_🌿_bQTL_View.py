@@ -26,30 +26,65 @@ if selected["PARAMETER_TYPE"] == "IATE":
     variants = selected["TREATMENTS"].split("_&_")
     eqtl = variants[1] if variants[0] == bqtl else variants[0]
     cols_to_load = [trait, *(v for v in variants)]
-# Is ATE
-else:
-    variants = [bqtl]
+    v1_case, v2_case = (float(x) for x in selected["CASE"].split("_&_"))
+    v1_control, v2_control = (float(x) for x in selected["CONTROL"].split("_&_"))
 
 raw_data = pd.read_csv(
         raw_data_file(st.session_state.nextflow_rundir), 
-        usecols = [trait, *(x for x in variants)]
-    )
+        usecols = [trait, *(x for x in variants)],
+    ).dropna()
+raw_data[bqtl] = raw_data[bqtl].astype(int)
+raw_data[eqtl] = raw_data[eqtl].astype(int)
+raw_data = raw_data[(raw_data[variants[0]].isin([v1_case, v1_control])) & (raw_data[variants[1]].isin([v2_case, v2_control]))]
 
-gpd = raw_data.groupby(variants)
 # Binary traits
 if raw_data[trait].nunique() == 2:
-    means = gpd.agg(
-        Mean=(trait, np.mean),
-        Sum=(trait, np.sum)
+    means = raw_data.groupby(variants).agg(
+        mean=(trait, np.mean),
+        ncases=(trait, np.sum)
         ).reset_index()
     means[eqtl] = means[eqtl].astype(str)
-    means["LogSum"] = np.log(means["Sum"] + 1)
-    st.dataframe(means)
-    fig = px.scatter(means, y="Mean", x=bqtl, color=eqtl, size="Sum")
-    fig.update_layout(scattermode="group", scattergap=0.9)
+    fig = px.scatter(
+        means, 
+        y="mean", 
+        x=bqtl, 
+        color=eqtl, 
+        size="ncases", 
+        labels={
+                "mean": f"{trait} mean",
+                bqtl: f"{bqtl} (# minor alleles)",
+                eqtl: f"{eqtl} (# minor alleles)"
+        },
+        title=f"{bqtl}'s modulation by {eqtl} (from raw data)",
+        color_discrete_sequence=["red", "blue"]
+    )
+    fig.update_layout(
+        scattermode="group", 
+        scattergap=0.9,
+        xaxis_type='category',
+        title_x=0.35
+    )
     
 # Continuous traits
 else:
-    gpd = raw_data.groupby([bqtl])
+    fig = px.violin(
+        raw_data, 
+        y=trait, 
+        x=bqtl, 
+        color=eqtl,
+        labels={
+                bqtl: f"{bqtl} (# minor alleles)",
+                eqtl: f"{eqtl} (# minor alleles)"
+        }, 
+        title=f"{bqtl}'s modulation by {eqtl} (from raw data)",
+        box=True,
+        color_discrete_sequence=["red", "blue"]
+        )
+    fig.update_layout(
+        violinmode="group", 
+        violingap=0.7,
+        xaxis_type='category',
+        title_x=0.35
+    )
 
 st.plotly_chart(fig, use_container_width=True)

@@ -15,5 +15,5 @@ where wild-kb is the node where the app will be running and is described in the 
 2. Run the app:
 
 ```bash
-streamlit run 0_🌶_Home.py --server.port=8080
+streamlit run 0_🌶_Home.py --server.port=8080 
 ```
