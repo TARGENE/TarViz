@@ -4,3 +4,5 @@ DATA_COLUMNS = [
     'COVARIATES', 'INITIAL_ESTIMATE', 'LOG']
 
 MT_ADJUSTEMENT_METHODS = ["Trait based Benjamini Hochberg", "None"]
+
+ENSEMBL_URL = "https://rest.ensembl.org"

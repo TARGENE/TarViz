@@ -8,7 +8,7 @@ In order to forward and display the the app in the browser (workaround taken fro
 1. Create a SSH tunnel from your local machine:
 
 ```bash
-ssh -L 8080:localhost:8080 wild-kb
+ssh -fNL 8080:localhost:8080 wild-kb -f
 ```
 where wild-kb is the node where the app will be running and is described in the ssh config file.
 

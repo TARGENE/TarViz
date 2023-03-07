@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+import requests
+from tarviz.constants import ENSEMBL_URL
 
 def result_file(nextflow_rundir):
     return os.path.join(nextflow_rundir, "preliminary_results.csv")
@@ -30,3 +32,35 @@ def bQTL_list(nextflow_rundir, config_filename="nextflow.config"):
     params = load_pipeline_params(os.path.join(nextflow_rundir, config_filename))
     bqtls_filepath = os.path.join(nextflow_rundir, params["BQTLS"])
     return pd.read_csv(bqtls_filepath, usecols=["ID"]).ID.tolist()
+
+def feature_string(features):
+    if features == None:
+        return ""
+    else:
+        return ";".join(str("feature=", f, ";") for f in features)
+
+def region_string(position, distance):
+    return str(position-distance, "-", position+distance)
+
+def http_variant_info(rsid):
+    url = "".join((
+        ENSEMBL_URL,
+        "/variation/human/",
+        rsid,
+        "?",
+        "phenotypes=1"
+    ))
+    return requests.get(url, headers={ "Content-Type": "application/json"}).json()
+
+
+def http_ensemble_annotations(chr, position, distance, features=("gene",)):
+    url = str(
+        ENSEMBL_URL,
+        "/overlap/region/human/", 
+        chr, 
+        ":", 
+        region_string(position, distance), 
+        "?", 
+        feature_string(features)
+    )
+    return requests.get(url, headers={"Content-Type": "application/json"}).json()
