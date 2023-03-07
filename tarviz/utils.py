@@ -33,15 +33,6 @@ def bQTL_list(nextflow_rundir, config_filename="nextflow.config"):
     bqtls_filepath = os.path.join(nextflow_rundir, params["BQTLS"])
     return pd.read_csv(bqtls_filepath, usecols=["ID"]).ID.tolist()
 
-def feature_string(features):
-    if features == None:
-        return ""
-    else:
-        return ";".join(str("feature=", f, ";") for f in features)
-
-def region_string(position, distance):
-    return str(position-distance, "-", position+distance)
-
 def http_variant_info(rsid):
     url = "".join((
         ENSEMBL_URL,
@@ -52,15 +43,32 @@ def http_variant_info(rsid):
     ))
     return requests.get(url, headers={ "Content-Type": "application/json"}).json()
 
-
-def http_ensemble_annotations(chr, position, distance, features=("gene",)):
-    url = str(
+def http_ensemble_annotations(
+        location_str, 
+        distance=100, 
+        features=("gene", "regulatory", "motif")
+        ):
+    chr, start_end = location_str.split(":")
+    start, end = start_end.split("-")
+    url = "".join((
         ENSEMBL_URL,
         "/overlap/region/human/", 
         chr, 
         ":", 
-        region_string(position, distance), 
+        str(int(start) - distance), 
+        "-", 
+        str(int(end) + distance),
         "?", 
-        feature_string(features)
-    )
+        ";".join("".join(("feature=", f)) for f in features)
+    ))
+    return requests.get(url, headers={"Content-Type": "application/json"}).json()
+
+def http_ensembl_binding_matrix(stable_matrix_id):
+    url = "".join((
+        ENSEMBL_URL,
+        "/species/homo_sapiens/binding_matrix/", 
+        stable_matrix_id, 
+        "?", 
+        "unit=frequencies", 
+    ))
     return requests.get(url, headers={"Content-Type": "application/json"}).json()

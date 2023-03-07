@@ -17,6 +17,7 @@ pyarrow = "^11.0.0"
 streamlit-extras = "^0.2.6"
 pytest = "^7.2.2"
 numpy = "^1.24.2"
+logomaker = "^0.8"
 
 
 [build-system]

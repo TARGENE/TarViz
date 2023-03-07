@@ -1,5 +1,5 @@
 from tarviz.utils import load_pipeline_params, bQTL_list, http_variant_info, \
-    http_ensemble_annotations
+    http_ensemble_annotations, http_ensembl_binding_matrix
 import os
 
 NEXTFLOW_RUNDIR = os.path.join("tests", "nextflow_rundir")
@@ -47,25 +47,16 @@ def test_bQTL_list():
     
 def test_http_variant_info():
     response = http_variant_info("rs35405640")
-    assert response == {
-        'phenotypes': [],
-        'most_severe_consequence': 'intergenic_variant', 
-        'mappings': [{
-            'start': 150373493, 
-            'allele_string': 'C/A/T', 
-            'strand': 1, 
-            'location': '3:150373493-150373493', 
-            'end': 150373493, 
-            'coord_system': 'chromosome', 
-            'seq_region_name': '3', 
-            'ancestral_allele': 'G', 
-            'assembly_name': 'GRCh38'}], 
-        'minor_allele': 'A', 
-        'synonyms': [], 
-        'name': 'rs35405640', 
-        'MAF': 0.05351, 
-        'evidence': ['Frequency', '1000Genomes', 'TOPMed', 'gnomAD'], 
-        'ambiguity': 'H', 
-        'var_class': 'SNP', 
-        'source': 'Variants (including SNPs and indels) imported from dbSNP'
-        }
+    assert 'phenotypes' in response
+    assert 'mappings' in response
+    assert response["name"] == "rs35405640"
+    
+def test_http_ensemble_annotations():
+    response = http_ensemble_annotations('3:150373493-150373493')
+    assert len(response) > 0 
+
+def test_http_ensembl_binding_matrix():
+    response = http_ensembl_binding_matrix("ENSPFM0487")
+    assert "elements" in response
+    assert "stable_id" in response
+

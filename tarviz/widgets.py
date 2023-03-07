@@ -3,13 +3,17 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from tarviz.constants import MT_ADJUSTEMENT_METHODS, DATA_COLUMNS
-from tarviz.utils import result_file, raw_data_file, http_variant_info
+from tarviz.utils import result_file, raw_data_file, http_variant_info, http_ensemble_annotations
+
+
+def top_page_widget():
+    col1, col2 = st.columns(2)
+    col1.title("TarGene Dashboard")
+    col2.image("images/logo.jpg")
 
 def pvalue_filters_widget():
-    col1, col2 = st.columns(2)
-    mt_method = col1.selectbox("Multiple Testing Adjustment Method", MT_ADJUSTEMENT_METHODS)
-    pvalue = float(col2.text_input("Pvalue Threshold", value=0.05))
-    st.markdown("""---""")
+    mt_method = st.sidebar.selectbox("Multiple Testing Adjustment Method", MT_ADJUSTEMENT_METHODS)
+    pvalue = float(st.sidebar.text_input("Pvalue Threshold", value=0.05))
     return mt_method, pvalue
 
 @st.cache_data
@@ -38,6 +42,7 @@ def filter(df: pd.DataFrame, mt_method, pvalue, target, treatment_combo, treatme
     
     return pd.eval(f"df[{filterstring}]")
 
+@st.cache_data
 def modulation_plot(bqtl, selected):
     trait = selected["TARGET"]
     # Is IATE
@@ -106,6 +111,7 @@ def modulation_plot(bqtl, selected):
 
     st.plotly_chart(fig, use_container_width=True)
 
+@st.cache_data
 def SNPinfo(rsid):
     response = http_variant_info(rsid)
     mapping_1 = response["mappings"][0]
@@ -127,9 +133,20 @@ def SNPinfo(rsid):
             """
     st.markdown(hide_table_row_index, unsafe_allow_html=True)
     st.table(basesnpinfo)
+    st.subheader("Existing phenotyping annotations")
     if len(response["phenotypes"]) > 0:
-        st.subheader("Existing phenotyping annotations")
         st.dataframe(response["phenotypes"])
     else:
-        st.markdown("No existing phenotyping annotations found from Ensembl.")
+        st.markdown("None.")
+    
+    return basesnpinfo
 
+@st.cache_data
+def region_annotations(location_str, distance, features):
+    response = http_ensemble_annotations(
+        location_str, 
+        distance=distance, 
+        features=features
+        )
+    return pd.DataFrame(response)
+    

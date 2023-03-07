@@ -2,7 +2,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 from tarviz.utils import result_file
-from tarviz.widgets import pvalue_filters_widget, load_data, filter
+from tarviz.widgets import pvalue_filters_widget, load_data, filter, top_page_widget
 from argparse import ArgumentParser
 
 st.set_page_config(layout="wide", page_icon="images/logo.ico")
@@ -33,8 +33,8 @@ def main(args):
     data = load_data()
 
     # Title
-    st.image("images/logo.jpg")
-    st.title("TarGene Dashboard")
+    top_page_widget()
+
     st.markdown("Welcome to the TarGene visualization interface.")
     # Display the table
     mt_method, pvalue = pvalue_filters_widget()
@@ -48,7 +48,7 @@ def main(args):
     col21.dataframe(limit_data(filtered).style.hide(axis='index'), use_container_width=True)
     # Hits per Target/Treatment
     per = colr22.multiselect("Hit counts", ["TREATMENTS", "TARGET"], default=["TREATMENTS"])
-    nhits = filtered.groupby(per).size().reset_index(name='COUNTS')
+    nhits = filtered.groupby(per).size().reset_index(name='COUNTS').sort_values("COUNTS", ascending=False)
     colr22.dataframe(nhits.style.hide(axis='index'))
     # Plot Pvalues
     pvalues_hist(filtered)
