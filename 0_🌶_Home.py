@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import numpy as np
 from tarviz.utils import load_data, bQTLs_data
 from tarviz.widgets import pvalue_filters_widget, filter, top_page_widget
 from argparse import ArgumentParser
@@ -16,7 +17,13 @@ def treatment_options(data):
 
 @st.cache_data
 def pvalues_hist(data: pd.DataFrame):
-    fig = px.histogram(data, x="PVALUE", nbins=100)
+    data["NEG_LOG_PVALUE"] = - np.log(data["PVALUE"])
+    fig = px.histogram(
+        data, 
+        x="NEG_LOG_PVALUE", 
+        labels={"NEG_LOG_PVALUE": f"-log(PVALUE)"},
+        nbins=100
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 @st.cache_data

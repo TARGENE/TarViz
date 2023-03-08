@@ -1,6 +1,7 @@
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
-from tarviz.utils import bQTLs_data, http_ensembl_binding_matrix, bqtls_hit_counts, load_data
+from tarviz.utils import bQTLs_data, http_ensembl_binding_matrix, bqtls_hit_counts, \
+    load_data, feature_columns
 from tarviz.widgets import pvalue_filters_widget, filter, modulation_plot, \
     SNPinfo, region_annotations, top_page_widget, plot_motif_logo
 from tarviz.constants import ANNOTATION_FEATURES
@@ -27,13 +28,14 @@ for (tab, feature) in zip(tabs, features):
     annotations = region_annotations(chr, v_start, v_end, distance, (feature,))
     with tab:
         if len(annotations) > 0:
+            annotations = feature_columns(annotations, feature)
+            st.markdown("Highlighted rows correspond to regions containing the variant.")
+            highlighted_rows = ((annotations['start'] <= v_start) & (annotations['end'] >= v_end)).map({
+                        True: 'background-color: green',
+                        False: ''
+            })
+            st.dataframe(annotations.style.apply(lambda _: highlighted_rows))
             if feature == "motif":
-                highlighted_rows = ((annotations['start'] <= v_start) & (annotations['end'] >= v_end)).map({
-                    True: 'background-color: green',
-                    False: ''
-                })
-                st.markdown("Highlighted rows correspond to regions containing the variant.")
-                st.dataframe(annotations.style.apply(lambda _: highlighted_rows))
                 matrix_id = st.selectbox("Binding Matrix", annotations["binding_matrix_stable_id"].unique())
                 response = http_ensembl_binding_matrix(matrix_id)                
                 binding_motif_start = annotations[annotations.binding_matrix_stable_id == matrix_id].iloc[0]["start"]
@@ -41,8 +43,6 @@ for (tab, feature) in zip(tabs, features):
                 pmax = int(v_end - binding_motif_start + 1)
                 plot_motif_logo(response, pmin, pmax)
 
-            else:
-                st.dataframe(annotations)
         else:
             st.markdown("No annotation found.")
 

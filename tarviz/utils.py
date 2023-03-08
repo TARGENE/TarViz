@@ -94,3 +94,10 @@ def bqtls_hit_counts(data):
     counts = data.groupby(["BQTL"])["TARGET"].nunique().reset_index(name="COUNTS")
     counts.sort_values("COUNTS", ascending=False, inplace=True)
     return counts["BQTL"] + " (" + counts["COUNTS"].astype(str) + " hits)"
+
+@st.cache_data
+def feature_columns(df, feature):
+    if feature == "motif":
+        return df[["transcription_factor_complex", "binding_matrix_stable_id", "score", "start", "end", "strand"]]
+    else:
+        return df

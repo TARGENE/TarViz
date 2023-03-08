@@ -194,8 +194,16 @@ def SNPinfo(rsid, bqtls_data):
     mapping_1 = response["mappings"][0]
     variant_row = bqtls_data[bqtls_data.ID == rsid].iloc[0]
     chr, start, end = location_from_str(mapping_1["location"])
+    if variant_row["REF.counts"] > variant_row["ALT.counts"]:
+        binding_allele = variant_row.REF + " (" + str(variant_row["REF.counts"]) + ")"
+        non_binding_allele = variant_row.ALT + " (" + str(variant_row["ALT.counts"]) + ")"
+    else:
+        non_binding_allele = variant_row.REF + " (" + str(variant_row["REF.counts"]) + ")"
+        binding_allele = variant_row.ALT + " (" + str(variant_row["ALT.counts"]) + ")"
+    
     basesnpinfo = {
-        "Studied Alleles": "/".join((variant_row.REF, variant_row.ALT)),
+        "Binding Allele (Counts)": binding_allele,
+        "Non-Binding Allele (Counts)": non_binding_allele,
         "Chromosome": [chr],
         "Start": [start],
         "End": [end],
