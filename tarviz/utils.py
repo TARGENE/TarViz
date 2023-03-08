@@ -46,20 +46,18 @@ def http_variant_info(rsid):
     return requests.get(url, headers={ "Content-Type": "application/json"}).json()
 
 def http_ensemble_annotations(
-        location_str, 
+        chr, start, end, 
         distance=100, 
         features=("gene", "regulatory", "motif")
         ):
-    chr, start_end = location_str.split(":")
-    start, end = start_end.split("-")
     url = "".join((
         ENSEMBL_URL,
         "/overlap/region/human/", 
         chr, 
         ":", 
-        str(int(start) - distance), 
+        str(start - distance), 
         "-", 
-        str(int(end) + distance),
+        str(end + distance),
         "?", 
         ";".join("".join(("feature=", f)) for f in features)
     ))

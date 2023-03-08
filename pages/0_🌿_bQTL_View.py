@@ -20,14 +20,14 @@ distance = col1.number_input("Region size (bp)", min_value=0, max_value=5000000,
 features = col2.multiselect("Features", ANNOTATION_FEATURES, default=["gene", "regulatory", "motif"])
 tabs = st.tabs(features)
 for (tab, feature) in zip(tabs, features):
-    location = basesnpinfo["Location"][0]
-    annotations = region_annotations(location, distance, (feature,))
+    chr = basesnpinfo["Chromosome"][0]
+    v_start = basesnpinfo["Start"][0]
+    v_end = basesnpinfo["End"][0]
+    annotations = region_annotations(chr, v_start, v_end, distance, (feature,))
     with tab:
         if len(annotations) > 0:
             if feature == "motif":
-                _, v_loc = location.split(":")
-                v_min_loc, v_max_loc = (int(x) for x in v_loc.split("-"))
-                highlighted_rows = ((annotations['start'] <= v_min_loc) & (annotations['end'] >= v_max_loc)).map({
+                highlighted_rows = ((annotations['start'] <= v_start) & (annotations['end'] >= v_end)).map({
                     True: 'background-color: green',
                     False: ''
                 })
@@ -36,8 +36,8 @@ for (tab, feature) in zip(tabs, features):
                 matrix_id = st.selectbox("Binding Matrix", annotations["binding_matrix_stable_id"].unique())
                 response = http_ensembl_binding_matrix(matrix_id)                
                 binding_motif_start = annotations[annotations.binding_matrix_stable_id == matrix_id].iloc[0]["start"]
-                pmin = int(v_min_loc - binding_motif_start + 1)
-                pmax = int(v_max_loc - binding_motif_start + 1)
+                pmin = int(v_start - binding_motif_start + 1)
+                pmax = int(v_end - binding_motif_start + 1)
                 plot_motif_logo(response, pmin, pmax)
 
             else:

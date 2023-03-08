@@ -51,8 +51,8 @@ def test_http_variant_info():
     assert response["name"] == "rs35405640"
     
 def test_http_ensemble_annotations():
-    response = http_ensemble_annotations('3:150373493-150373493')
-    assert len(response) > 0 
+    response = http_ensemble_annotations('3', 150373493, 150373493)
+    assert len(response) > 1
 
 def test_http_ensembl_binding_matrix():
     response = http_ensembl_binding_matrix("ENSPFM0487")

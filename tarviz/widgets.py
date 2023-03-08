@@ -43,90 +43,173 @@ def filter(df: pd.DataFrame, mt_method, pvalue, target, treatment_combo, treatme
     
     return pd.eval(f"df[{filterstring}]")
 
-@st.cache_data
-def modulation_plot(bqtl, selected):
-    trait = selected["TARGET"]
-    # Is IATE
-    if selected["PARAMETER_TYPE"] == "IATE":
-        variants = selected["TREATMENTS"].split("_&_")
-        eqtl = variants[1] if variants[0] == bqtl else variants[0]
-        v1_case, v2_case = (float(x) for x in selected["CASE"].split("_&_"))
-        v1_control, v2_control = (float(x) for x in selected["CONTROL"].split("_&_"))
-
-    raw_data = pd.read_csv(
-        raw_data_file(st.session_state.nextflow_rundir), 
-        usecols = [trait, *(x for x in variants)],
-    ).dropna()
-    raw_data[bqtl] = raw_data[bqtl].astype(int)
-    raw_data[eqtl] = raw_data[eqtl].astype(int)
-    raw_data = raw_data[(raw_data[variants[0]].isin([v1_case, v1_control])) & (raw_data[variants[1]].isin([v2_case, v2_control]))]
-
-    if raw_data[trait].nunique() == 2:
-        means = raw_data.groupby(variants).agg(
-            mean=(trait, np.mean),
-            ncases=(trait, np.sum)
-            ).reset_index()
-        means[eqtl] = means[eqtl].astype(str)
-        fig = px.scatter(
-            means, 
-            y="mean", 
-            x=bqtl, 
-            color=eqtl, 
-            size="ncases", 
-            labels={
-                    "mean": f"{trait} mean",
-                    bqtl: f"{bqtl} (# minor alleles)",
-                    eqtl: f"{eqtl} (# minor alleles)"
-            },
-            title=f"{bqtl}'s modulation by {eqtl} (from raw data)",
-            color_discrete_sequence=["red", "blue"]
+def binary_IATE_plot(raw_data, bqtl, modulator, trait):
+    means = raw_data.groupby([bqtl, modulator]).agg(
+        mean=(trait, np.mean),
+        ncases=(trait, np.sum)
+    ).reset_index()
+    means[modulator] = means[modulator].astype(str)
+    fig = px.scatter(
+        means, 
+        y="mean", 
+        x=bqtl, 
+        color=modulator, 
+        size="ncases", 
+        labels={
+                "mean": f"{trait} mean",
+                bqtl: f"{bqtl} (# minor alleles)",
+                modulator: f"{modulator} (# minor alleles)"
+        },
+        title=f"{bqtl}'s modulation by {modulator} (from raw data)",
+        color_discrete_sequence=["red", "blue"]
         )
-        fig.update_layout(
+    fig.update_layout(
             scattermode="group", 
             scattergap=0.9,
             xaxis_type='category',
             title_x=0.35
         )
-        
-    # Continuous traits
-    else:
-        fig = px.violin(
-            raw_data, 
-            y=trait, 
-            x=bqtl, 
-            color=eqtl,
-            labels={
-                    bqtl: f"{bqtl} (# minor alleles)",
-                    eqtl: f"{eqtl} (# minor alleles)"
-            }, 
-            title=f"{bqtl}'s modulation by {eqtl} (from raw data)",
-            box=True,
-            color_discrete_sequence=["red", "blue"]
-            )
-        fig.update_layout(
-            violinmode="group", 
-            violingap=0.7,
-            xaxis_type='category',
-            title_x=0.35
-        )
+    return fig
 
+def continuous_IATE_plot(raw_data, bqtl, modulator, trait):
+    fig = px.violin(
+        raw_data, 
+        y=trait, 
+        x=bqtl, 
+        color=modulator,
+        labels={
+                bqtl: f"{bqtl} (# minor alleles)",
+                modulator: f"{modulator} (# minor alleles)"
+        }, 
+        title=f"{bqtl}'s modulation by {modulator} (from raw data)",
+        box=True,
+        color_discrete_sequence=["red", "blue"]
+    )
+    fig.update_layout(
+        violinmode="group", 
+        violingap=0.7,
+        xaxis_type='category',
+        title_x=0.35
+    )
+    return fig
+
+def binary_ATE_plot(raw_data, bqtl, trait):
+    means = raw_data.groupby([bqtl]).agg(
+        mean=(trait, np.mean),
+        ncases=(trait, np.sum)
+    ).reset_index()
+    fig = px.scatter(
+        means, 
+        y="mean", 
+        x=bqtl, 
+        size="ncases", 
+        labels={
+                "mean": f"{trait} mean",
+                bqtl: f"{bqtl} (# minor alleles)",
+        },
+        title=f"{bqtl}'s effect (from raw data)",
+    )
+    fig.update_layout(
+        scattermode="group", 
+        scattergap=0.9,
+        xaxis_type='category',
+        title_x=0.35
+    )
+    return fig
+
+def continuous_ATE_plot(raw_data, bqtl, trait):
+    fig = px.violin(
+        raw_data, 
+        y=trait, 
+        x=bqtl, 
+        labels={
+                bqtl: f"{bqtl} (# minor alleles)",
+        }, 
+        title=f"{bqtl}'s effect (from raw data)",
+        box=True,
+    )
+    fig.update_layout(
+        violinmode="group", 
+        violingap=0.7,
+        xaxis_type='category',
+        title_x=0.35
+    )
+    return fig
+
+@st.cache_data
+def modulation_plot(bqtl, selected):
+    trait = selected["TARGET"]
+    param_type = selected["PARAMETER_TYPE"]
+    treatments_string = selected["TREATMENTS"]
+
+    if param_type == "IATE":
+        variants = treatments_string.split("_&_")
+        if len(variants) != 2:
+            st.markdown("The modulation plot for the IATE is currently only available when the Treatment contains exactly 2 variables.")
+            return
+        else:
+            modulator = variants[1] if variants[0] == bqtl else variants[0]
+            v1_case, v2_case = (float(x) for x in selected["CASE"].split("_&_"))
+            v1_control, v2_control = (float(x) for x in selected["CONTROL"].split("_&_"))
+            raw_data = pd.read_csv(
+                raw_data_file(st.session_state.nextflow_rundir), 
+                usecols = [trait, *(x for x in variants)],
+            ).dropna()
+            raw_data[bqtl] = raw_data[bqtl].astype(int)
+            raw_data[modulator] = raw_data[modulator].astype(int)
+            raw_data = raw_data[(raw_data[variants[0]].isin([v1_case, v1_control])) & (raw_data[variants[1]].isin([v2_case, v2_control]))]
+            # Plot for Binary traits
+            if raw_data[trait].nunique() == 2:
+                fig = binary_IATE_plot(raw_data, bqtl, modulator, trait)   
+            # Plot for Continuous traits
+            else:
+                fig = continuous_IATE_plot(raw_data, bqtl, modulator, trait)
+
+    elif param_type == "ATE":
+        if "_&_" in treatments_string:
+            st.markdown("Modulation plot can only be displayed when the Treatment contains only one variable.")
+            return
+        else:
+            raw_data = pd.read_csv(
+                raw_data_file(st.session_state.nextflow_rundir), 
+                usecols = [trait, bqtl],
+            ).dropna()
+            raw_data[bqtl] = raw_data[bqtl].astype(int)
+            case = float(selected["CASE"])
+            control = float(selected["CONTROL"])
+            raw_data = raw_data[(raw_data[bqtl].isin([case, control]))]
+            # Plot for Binary traits
+            if raw_data[trait].nunique() == 2:
+                fig = binary_ATE_plot(raw_data, bqtl, trait)
+            # Plot for Continuous traits
+            else:
+                fig = continuous_ATE_plot(raw_data, bqtl, trait)
+        
     st.plotly_chart(fig, use_container_width=True)
+
+def location_from_str(location_str):
+    chr, start_end = location_str.split(":")
+    start, end = start_end.split("-")
+    return chr, int(start), int(end)
 
 @st.cache_data
 def SNPinfo(rsid, bqtls_data):
     response = http_variant_info(rsid)
     mapping_1 = response["mappings"][0]
     variant_row = bqtls_data[bqtls_data.ID == rsid].iloc[0]
+    chr, start, end = location_from_str(mapping_1["location"])
     basesnpinfo = {
         "Studied Alleles": "/".join((variant_row.REF, variant_row.ALT)),
-        "Location": [mapping_1["location"]],
+        "Chromosome": [chr],
+        "Start": [start],
+        "End": [end],
         "Strand": [mapping_1["strand"]],
         "Ensembl Alleles": [mapping_1["allele_string"]],
         "Ensembl Minor Allele": [response["minor_allele"]],
         "Ensembl MAF": [response["MAF"]],
         "Ensembl Ancestral Allele": [mapping_1["ancestral_allele"]],
     }
-    st.header(f"Ensembl Report")
+    st.header(f"Base Report")
     # Inject CSS with Markdown to hide table's row indices
     hide_table_row_index = """
             <style>
@@ -145,9 +228,9 @@ def SNPinfo(rsid, bqtls_data):
     return basesnpinfo
 
 @st.cache_data
-def region_annotations(location_str, distance, features):
+def region_annotations(chr, v_start, v_end, distance, features):
     response = http_ensemble_annotations(
-        location_str, 
+        chr, v_start, v_end, 
         distance=distance, 
         features=features
         )
