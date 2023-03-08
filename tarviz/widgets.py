@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import logomaker
 from tarviz.constants import MT_ADJUSTEMENT_METHODS, DATA_COLUMNS
 from tarviz.utils import result_file, raw_data_file, http_variant_info, http_ensemble_annotations
 
@@ -112,16 +113,18 @@ def modulation_plot(bqtl, selected):
     st.plotly_chart(fig, use_container_width=True)
 
 @st.cache_data
-def SNPinfo(rsid):
+def SNPinfo(rsid, bqtls_data):
     response = http_variant_info(rsid)
     mapping_1 = response["mappings"][0]
+    variant_row = bqtls_data[bqtls_data.ID == rsid].iloc[0]
     basesnpinfo = {
+        "Studied Alleles": "/".join((variant_row.REF, variant_row.ALT)),
         "Location": [mapping_1["location"]],
         "Strand": [mapping_1["strand"]],
-        "Alleles": [mapping_1["allele_string"]],
-        "Minor Allele": [response["minor_allele"]],
-        "MAF": [response["MAF"]],
-        "Ancestral Allele": [mapping_1["ancestral_allele"]],
+        "Ensembl Alleles": [mapping_1["allele_string"]],
+        "Ensembl Minor Allele": [response["minor_allele"]],
+        "Ensembl MAF": [response["MAF"]],
+        "Ensembl Ancestral Allele": [mapping_1["ancestral_allele"]],
     }
     st.header(f"Ensembl Report")
     # Inject CSS with Markdown to hide table's row indices
@@ -149,4 +152,16 @@ def region_annotations(location_str, distance, features):
         features=features
         )
     return pd.DataFrame(response)
-    
+
+@st.cache_data
+def plot_motif_logo(json_response, pmin, pmax):
+    bm_df = pd.DataFrame([json_response['elements'][str(i)] 
+                          for i in range(1,json_response['length'])])
+    logo = logomaker.Logo(bm_df)
+    logo.highlight_position_range(pmin=pmin, pmax=pmax, color='gold', alpha=.5)
+    logo.ax.set_title(
+        f"Associated transcription factor complexes: "
+        f"{','.join(json_response['associated_transcription_factor_complexes'])} "
+        f"from {json_response['source']}"
+    )
+    st.pyplot(logo.fig)

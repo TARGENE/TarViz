@@ -8,12 +8,14 @@ In order to forward and display the the app in the browser (workaround taken fro
 1. Create a SSH tunnel from your local machine:
 
 ```bash
-ssh -fNL 8080:localhost:8080 wild-kb -f
+ssh -fNL 8080:localhost:8080 wild-kb
 ```
 where wild-kb is the node where the app will be running and is described in the ssh config file.
 
 2. Run the app:
 
 ```bash
-streamlit run 0_🌶_Home.py --server.port=8080 
+streamlit run 0_🌶_Home.py --server.port=8080 NEXTFLOW_RUNDIR
 ```
+
+where `NEXTFLOW_RUNDIR` is the TarGene pipeline's run directory.

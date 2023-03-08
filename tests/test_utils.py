@@ -1,4 +1,4 @@
-from tarviz.utils import load_pipeline_params, bQTL_list, http_variant_info, \
+from tarviz.utils import load_pipeline_params, bQTLs_data, http_variant_info, \
     http_ensemble_annotations, http_ensembl_binding_matrix
 import os
 
@@ -32,10 +32,9 @@ def test_parse_pipeline_params():
         "ENCODING_FILE": "/exports/igmm/eddie/UK-BioBank-53116/phenotypes/encoding.ukb"
     }
 
-def test_bQTL_list():
-    bqtls = bQTL_list(NEXTFLOW_RUNDIR)
-    print(bqtls)
-    assert bqtls == [
+def test_bQTLs_data():
+    bqtls = bQTLs_data(NEXTFLOW_RUNDIR)
+    assert bqtls.ID.tolist() == [
         "rs35405640", 
         "rs11544037", 
         "rs961320", 

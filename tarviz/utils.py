@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import requests
+import streamlit as st
 from tarviz.constants import ENSEMBL_URL
 
 def result_file(nextflow_rundir):
@@ -27,11 +28,12 @@ def load_pipeline_params(config_file):
                 params[key.strip()] = val.strip().strip("'").strip('"')
         elif sline.startswith("params"):
             in_param_section = True
-    
-def bQTL_list(nextflow_rundir, config_filename="nextflow.config"):
+
+@st.cache_data
+def bQTLs_data(nextflow_rundir, config_filename="nextflow.config"):
     params = load_pipeline_params(os.path.join(nextflow_rundir, config_filename))
     bqtls_filepath = os.path.join(nextflow_rundir, params["BQTLS"])
-    return pd.read_csv(bqtls_filepath, usecols=["ID"]).ID.tolist()
+    return pd.read_csv(bqtls_filepath)
 
 def http_variant_info(rsid):
     url = "".join((
@@ -72,3 +74,4 @@ def http_ensembl_binding_matrix(stable_matrix_id):
         "unit=frequencies", 
     ))
     return requests.get(url, headers={"Content-Type": "application/json"}).json()
+

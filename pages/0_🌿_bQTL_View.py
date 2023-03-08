@@ -1,18 +1,18 @@
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
-from tarviz.utils import bQTL_list, raw_data_file
+from tarviz.utils import bQTLs_data, http_ensembl_binding_matrix
 from tarviz.widgets import pvalue_filters_widget, filter, load_data, modulation_plot, \
-    SNPinfo, region_annotations, top_page_widget
+    SNPinfo, region_annotations, top_page_widget, plot_motif_logo
 from tarviz.constants import ANNOTATION_FEATURES
 
-
 top_page_widget()
-
-bqtl = st.selectbox("bQTL", bQTL_list(st.session_state.nextflow_rundir))
 mt_method, pvalue = pvalue_filters_widget()
 
+bqtls_data = bQTLs_data(st.session_state.nextflow_rundir)
+bqtl = st.selectbox("bQTL", bqtls_data.ID.unique())
+
 # Display SNP base info
-basesnpinfo = SNPinfo(bqtl)
+basesnpinfo = SNPinfo(bqtl, bqtls_data)
 # Display region information
 st.subheader("Region annotations")
 col1, col2 = st.columns(2)
@@ -31,9 +31,15 @@ for (tab, feature) in zip(tabs, features):
                     True: 'background-color: green',
                     False: ''
                 })
-                st.markdown("Highlighted rows contain the variant.")
+                st.markdown("Highlighted rows correspond to regions containing the variant.")
                 st.dataframe(annotations.style.apply(lambda _: highlighted_rows))
-                st.selectbox("Binding Matrix", annotations["binding_matrix_stable_id"].unique())
+                matrix_id = st.selectbox("Binding Matrix", annotations["binding_matrix_stable_id"].unique())
+                response = http_ensembl_binding_matrix(matrix_id)                
+                binding_motif_start = annotations[annotations.binding_matrix_stable_id == matrix_id].iloc[0]["start"]
+                pmin = int(v_min_loc - binding_motif_start + 1)
+                pmax = int(v_max_loc - binding_motif_start + 1)
+                plot_motif_logo(response, pmin, pmax)
+
             else:
                 st.dataframe(annotations)
         else:
