@@ -1,16 +1,17 @@
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
-from tarviz.utils import bQTLs_data, http_ensembl_binding_matrix
-from tarviz.widgets import pvalue_filters_widget, filter, load_data, modulation_plot, \
+from tarviz.utils import bQTLs_data, http_ensembl_binding_matrix, bqtls_hit_counts, load_data
+from tarviz.widgets import pvalue_filters_widget, filter, modulation_plot, \
     SNPinfo, region_annotations, top_page_widget, plot_motif_logo
 from tarviz.constants import ANNOTATION_FEATURES
 
 top_page_widget()
 mt_method, pvalue = pvalue_filters_widget()
+bqtls_data = bQTLs_data()
+data = filter(load_data(bqtls_data), mt_method, pvalue, "None", "None", "None")
 
-bqtls_data = bQTLs_data(st.session_state.nextflow_rundir)
-bqtl = st.selectbox("bQTL", bqtls_data.ID.unique())
-
+bqtl_str = st.selectbox("Select bQTL (# Trait hits)", bqtls_hit_counts(data))
+bqtl = bqtl_str.split(" (")[0]
 # Display SNP base info
 basesnpinfo = SNPinfo(bqtl, bqtls_data)
 # Display region information
@@ -47,12 +48,12 @@ for (tab, feature) in zip(tabs, features):
 
 st.header(f"TarGene Hits")
 st.markdown("Please select an estimation result to display further information (this may take a few seconds):")
-data = filter(load_data(), mt_method, pvalue, "None", "None", bqtl)
 
-builder = GridOptionsBuilder.from_dataframe(data)
+bqtl_data = filter(data, mt_method, pvalue, "None", "None", bqtl)
+builder = GridOptionsBuilder.from_dataframe(bqtl_data)
 builder.configure_selection(selection_mode='single', use_checkbox=True, pre_selected_rows=[0])
 builder.configure_pagination(enabled=True, paginationAutoPageSize=False, paginationPageSize=10)
-grid_return = AgGrid(data, gridOptions=builder.build())
+grid_return = AgGrid(bqtl_data, gridOptions=builder.build())
 
 if len(grid_return["selected_rows"]) > 0:
     modulation_plot(bqtl, grid_return["selected_rows"][0])

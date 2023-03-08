@@ -1,8 +1,8 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from tarviz.utils import result_file
-from tarviz.widgets import pvalue_filters_widget, load_data, filter, top_page_widget
+from tarviz.utils import load_data, bQTLs_data
+from tarviz.widgets import pvalue_filters_widget, filter, top_page_widget
 from argparse import ArgumentParser
 
 st.set_page_config(layout="wide", page_icon="images/logo.ico")
@@ -30,7 +30,7 @@ def columns(data):
 def main(args):
     st.session_state['nextflow_rundir'] = args.rundir
 
-    data = load_data()
+    data = load_data(bQTLs_data())
 
     # Title
     top_page_widget()

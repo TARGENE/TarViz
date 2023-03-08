@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import logomaker
-from tarviz.constants import MT_ADJUSTEMENT_METHODS, DATA_COLUMNS
-from tarviz.utils import result_file, raw_data_file, http_variant_info, http_ensemble_annotations
+from tarviz.constants import MT_ADJUSTEMENT_METHODS
+from tarviz.utils import raw_data_file, http_variant_info, http_ensemble_annotations
 
 
 def top_page_widget():
@@ -16,10 +16,6 @@ def pvalue_filters_widget():
     mt_method = st.sidebar.selectbox("Multiple Testing Adjustment Method", MT_ADJUSTEMENT_METHODS)
     pvalue = float(st.sidebar.text_input("Pvalue Threshold", value=0.05))
     return mt_method, pvalue
-
-@st.cache_data
-def load_data():
-    return pd.read_csv(result_file(st.session_state.nextflow_rundir))[DATA_COLUMNS]
 
 @st.cache_data
 def unique_treatments(data):

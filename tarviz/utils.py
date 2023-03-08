@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import requests
 import streamlit as st
-from tarviz.constants import ENSEMBL_URL
+from tarviz.constants import ENSEMBL_URL, DATA_COLUMNS
 
 def result_file(nextflow_rundir):
     return os.path.join(nextflow_rundir, "preliminary_results.csv")
@@ -29,11 +29,27 @@ def load_pipeline_params(config_file):
         elif sline.startswith("params"):
             in_param_section = True
 
+def get_bql(treatment_str, bqtl_set):
+    for t in treatment_str.split("_&_"):
+        if t in bqtl_set:
+            return t
+    return None
+
 @st.cache_data
-def bQTLs_data(nextflow_rundir, config_filename="nextflow.config"):
-    params = load_pipeline_params(os.path.join(nextflow_rundir, config_filename))
-    bqtls_filepath = os.path.join(nextflow_rundir, params["BQTLS"])
-    return pd.read_csv(bqtls_filepath)
+def load_data(bqtl_data=None):
+    data = pd.read_csv(result_file(st.session_state.nextflow_rundir))[DATA_COLUMNS]
+    if bqtl_data is not None:
+         bqtl_set = set(bqtl_data.ID.unique())
+         data["BQTL"] = [get_bql(x, bqtl_set) for x in data.TREATMENTS]
+    return data 
+
+@st.cache_data
+def bQTLs_data(config_filename="nextflow.config"):
+    params = load_pipeline_params(os.path.join(st.session_state.nextflow_rundir, config_filename))
+    bqtls_filepath = os.path.join(st.session_state.nextflow_rundir, params["BQTLS"])
+    if os.path.exists(bqtls_filepath):
+        return pd.read_csv(bqtls_filepath)
+    return None
 
 def http_variant_info(rsid):
     url = "".join((
@@ -73,3 +89,8 @@ def http_ensembl_binding_matrix(stable_matrix_id):
     ))
     return requests.get(url, headers={"Content-Type": "application/json"}).json()
 
+@st.cache_data
+def bqtls_hit_counts(data):
+    counts = data.groupby(["BQTL"])["TARGET"].nunique().reset_index(name="COUNTS")
+    counts.sort_values("COUNTS", ascending=False, inplace=True)
+    return counts["BQTL"] + " (" + counts["COUNTS"].astype(str) + " hits)"
