@@ -2,12 +2,12 @@ import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 from tarviz.utils import bQTLs_data, http_ensembl_binding_matrix, bqtls_hit_counts, \
     load_data, feature_columns
-from tarviz.widgets import pvalue_filters_widget, filter, modulation_plot, \
+from tarviz.widgets import sidebar_widget, filter, modulation_plot, \
     SNPinfo, region_annotations, top_page_widget, plot_motif_logo
 from tarviz.constants import ANNOTATION_FEATURES
 
 top_page_widget()
-mt_method, pvalue = pvalue_filters_widget()
+mt_method, pvalue = sidebar_widget()
 bqtls_data = bQTLs_data()
 data = filter(load_data(bqtls_data), mt_method, pvalue, "None", "None", "None")
 

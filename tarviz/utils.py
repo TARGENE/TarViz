@@ -36,8 +36,8 @@ def get_bql(treatment_str, bqtl_set):
     return None
 
 @st.cache_data
-def load_data(bqtl_data=None):
-    data = pd.read_csv(result_file(st.session_state.nextflow_rundir))[DATA_COLUMNS]
+def load_data(bqtl_data=None, results_file=None):
+    data = pd.read_csv(os.path.join(st.session_state.nextflow_rundir, "results", results_file))[DATA_COLUMNS]
     if bqtl_data is not None:
          bqtl_set = set(bqtl_data.ID.unique())
          data["BQTL"] = [get_bql(x, bqtl_set) for x in data.TREATMENTS]

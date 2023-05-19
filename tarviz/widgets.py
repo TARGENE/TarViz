@@ -6,33 +6,35 @@ import logomaker
 from tarviz.constants import MT_ADJUSTEMENT_METHODS
 from tarviz.utils import raw_data_file, http_variant_info, http_ensemble_annotations
 
+def normal_approx_error(m, n):
+    return 1.96 * np.sqrt(np.divide(m * (1 - m), n))
 
 def top_page_widget():
     col1, col2 = st.columns(2)
     col1.title("TarGene Dashboard")
     col2.image("images/logo.jpg")
 
-def pvalue_filters_widget():
-    mt_method = st.sidebar.selectbox("Multiple Testing Adjustment Method", MT_ADJUSTEMENT_METHODS)
+def sidebar_widget():
+    results_file = st.sidebar.text_input("Result's filename", value="permutation_summary.csv")
+    column = st.sidebar.selectbox("P-value column", MT_ADJUSTEMENT_METHODS)
     pvalue = float(st.sidebar.text_input("Pvalue Threshold", value=0.05))
-    return mt_method, pvalue
+    return results_file, column, pvalue
 
 @st.cache_data
 def unique_treatments(data):
     st.selectbox("Treatment", [t for x in data.TREATMENTS for t in x.split("_&_")])
 
 @st.cache_data
-def filter(df: pd.DataFrame, mt_method, pvalue, target, treatment_combo, treatment) -> pd.DataFrame:
+def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment_combo, treatment) -> pd.DataFrame:
     # Pvalue based filter
-    filterstring = f"(df.ADJUSTED_PVALUE < {pvalue})"
-    if mt_method == "None":
-        filterstring = f"(df.PVALUE < {pvalue})"
+    filterstring = f"(df.{pval_col} < {pvalue})"
+
     # Target based filter
     if target != "None":
-        filterstring += f" & (df.TARGET == \"{target}\")"
+        filterstring += f" & (df.TARGET.str.contains(\"{target}\"))"
     # Treatment combo based filter
     if treatment_combo != "None":
-        filterstring += f" & (df.TREATMENTS == \"{treatment_combo}\")"
+        filterstring += f" & (df.TREATMENTS.str.contains(\"{treatment_combo}\"))"
     # Treatment based filter
     if treatment != "None":
         filterstring += f" & (df.TREATMENTS.str.contains(\"{treatment}\"))"
@@ -42,11 +44,14 @@ def filter(df: pd.DataFrame, mt_method, pvalue, target, treatment_combo, treatme
 def binary_IATE_plot(raw_data, bqtl, modulator, trait):
     means = raw_data.groupby([bqtl, modulator]).agg(
         mean=(trait, np.mean),
+        count=(trait, np.size),
         ncases=(trait, np.sum)
     ).reset_index()
+    means["Error"] = normal_approx_error(means["mean"], means["count"])
     means[modulator] = means[modulator].astype(str)
     fig = px.scatter(
         means, 
+        error_y="Error",
         y="mean", 
         x=bqtl, 
         color=modulator, 
@@ -56,7 +61,7 @@ def binary_IATE_plot(raw_data, bqtl, modulator, trait):
                 bqtl: f"{bqtl} (# minor alleles)",
                 modulator: f"{modulator} (# minor alleles)"
         },
-        title=f"{bqtl}'s modulation by {modulator} (from raw data)",
+        title=f"{bqtl}'s modulation by {modulator} (from raw data).<br><sup>Error bars are based on the Normal approximation.</sup>",
         color_discrete_sequence=["red", "blue"]
         )
     fig.update_layout(
@@ -92,18 +97,21 @@ def continuous_IATE_plot(raw_data, bqtl, modulator, trait):
 def binary_ATE_plot(raw_data, bqtl, trait):
     means = raw_data.groupby([bqtl]).agg(
         mean=(trait, np.mean),
+        count=(trait, np.size),
         ncases=(trait, np.sum)
     ).reset_index()
+    means["Error"] = normal_approx_error(means["mean"], means["count"])
     fig = px.scatter(
         means, 
-        y="mean", 
+        y="mean",
+        error_y="Error",
         x=bqtl, 
         size="ncases", 
         labels={
                 "mean": f"{trait} mean",
                 bqtl: f"{bqtl} (# minor alleles)",
         },
-        title=f"{bqtl}'s effect (from raw data)",
+        title=f"{bqtl}'s effect (from raw data).<br><sup>Error bars are based on the Normal approximation.</sup>",
     )
     fig.update_layout(
         scattermode="group", 
