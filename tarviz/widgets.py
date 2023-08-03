@@ -15,30 +15,31 @@ def top_page_widget():
     col2.image("images/logo.jpg")
 
 def sidebar_widget():
-    results_file = st.sidebar.text_input("Result's filename", value="permutation_summary.csv")
+    results_file = st.sidebar.text_input("Result's filename", value="significant.csv")
     column = st.sidebar.selectbox("P-value column", MT_ADJUSTEMENT_METHODS)
     pvalue = float(st.sidebar.text_input("Pvalue Threshold", value=0.05))
-    return results_file, column, pvalue
+    param_type = st.sidebar.selectbox("Parameter Type", ["None", "ATE", "IATE"])
+    return results_file, column, pvalue, param_type
 
 @st.cache_data
 def unique_treatments(data):
     st.selectbox("Treatment", [t for x in data.TREATMENTS for t in x.split("_&_")])
 
 @st.cache_data
-def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment_combo, treatment) -> pd.DataFrame:
+def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment, param_type) -> pd.DataFrame:
     # Pvalue based filter
     filterstring = f"(df.{pval_col} < {pvalue})"
 
     # Target based filter
     if target != "None":
         filterstring += f" & (df.TARGET.str.contains(\"{target}\"))"
-    # Treatment combo based filter
-    if treatment_combo != "None":
-        filterstring += f" & (df.TREATMENTS.str.contains(\"{treatment_combo}\"))"
     # Treatment based filter
     if treatment != "None":
         filterstring += f" & (df.TREATMENTS.str.contains(\"{treatment}\"))"
     
+    if param_type != "None":
+        filterstring += f" & (df.PARAMETER_TYPE == \"{param_type}\")"
+
     return pd.eval(f"df[{filterstring}]")
 
 def binary_IATE_plot(raw_data, bqtl, modulator, trait):
@@ -58,10 +59,10 @@ def binary_IATE_plot(raw_data, bqtl, modulator, trait):
         size="ncases", 
         labels={
                 "mean": f"{trait} mean",
-                bqtl: f"{bqtl} (# minor alleles)",
-                modulator: f"{modulator} (# minor alleles)"
+                bqtl: f"{bqtl}",
+                modulator: f"{modulator}"
         },
-        title=f"{bqtl}'s modulation by {modulator} (from raw data).<br><sup>Error bars are based on the Normal approximation.</sup>",
+        title="Trait's distribution per bQTL/modulator.<br><sup>Error bars are based on the Normal approximation.</sup>",
         color_discrete_sequence=["red", "blue"]
         )
     fig.update_layout(
@@ -79,10 +80,10 @@ def continuous_IATE_plot(raw_data, bqtl, modulator, trait):
         x=bqtl, 
         color=modulator,
         labels={
-                bqtl: f"{bqtl} (# minor alleles)",
-                modulator: f"{modulator} (# minor alleles)"
+                bqtl: f"{bqtl}",
+                modulator: f"{modulator}"
         }, 
-        title=f"{bqtl}'s modulation by {modulator} (from raw data)",
+        title="Trait's distribution per bQTL/modulator",
         box=True,
         color_discrete_sequence=["red", "blue"]
     )
@@ -109,9 +110,9 @@ def binary_ATE_plot(raw_data, bqtl, trait):
         size="ncases", 
         labels={
                 "mean": f"{trait} mean",
-                bqtl: f"{bqtl} (# minor alleles)",
+                bqtl: f"{bqtl}",
         },
-        title=f"{bqtl}'s effect (from raw data).<br><sup>Error bars are based on the Normal approximation.</sup>",
+        title=f"Trait distribution per genotype.<br><sup>Error bars are based on the Normal approximation.</sup>",
     )
     fig.update_layout(
         scattermode="group", 
@@ -127,9 +128,9 @@ def continuous_ATE_plot(raw_data, bqtl, trait):
         y=trait, 
         x=bqtl, 
         labels={
-                bqtl: f"{bqtl} (# minor alleles)",
+                bqtl: f"{bqtl}",
         }, 
-        title=f"{bqtl}'s effect (from raw data)",
+        title="Trait distribution per genotype",
         box=True,
     )
     fig.update_layout(
@@ -153,14 +154,14 @@ def modulation_plot(bqtl, selected):
             return
         else:
             modulator = variants[1] if variants[0] == bqtl else variants[0]
-            v1_case, v2_case = (float(x) for x in selected["CASE"].split("_&_"))
-            v1_control, v2_control = (float(x) for x in selected["CONTROL"].split("_&_"))
+            v1_case, v2_case = selected["CASE"].split("_&_")
+            v1_control, v2_control = selected["CONTROL"].split("_&_")
             raw_data = pd.read_csv(
                 raw_data_file(st.session_state.nextflow_rundir), 
                 usecols = [trait, *(x for x in variants)],
             ).dropna()
-            raw_data[bqtl] = raw_data[bqtl].astype(int)
-            raw_data[modulator] = raw_data[modulator].astype(int)
+            raw_data[bqtl] = raw_data[bqtl]
+            raw_data[modulator] = raw_data[modulator]
             raw_data = raw_data[(raw_data[variants[0]].isin([v1_case, v1_control])) & (raw_data[variants[1]].isin([v2_case, v2_control]))]
             # Plot for Binary traits
             if raw_data[trait].nunique() == 2:
@@ -171,16 +172,15 @@ def modulation_plot(bqtl, selected):
 
     elif param_type == "ATE":
         if "_&_" in treatments_string:
-            st.markdown("Modulation plot can only be displayed when the Treatment contains only one variable.")
+            st.markdown("Modulation plot foe the ATE can only be displayed when the Treatment contains only one variable.")
             return
         else:
             raw_data = pd.read_csv(
                 raw_data_file(st.session_state.nextflow_rundir), 
                 usecols = [trait, bqtl],
             ).dropna()
-            raw_data[bqtl] = raw_data[bqtl].astype(int)
-            case = float(selected["CASE"])
-            control = float(selected["CONTROL"])
+            case = selected["CASE"]
+            control = selected["CONTROL"]
             raw_data = raw_data[(raw_data[bqtl].isin([case, control]))]
             # Plot for Binary traits
             if raw_data[trait].nunique() == 2:

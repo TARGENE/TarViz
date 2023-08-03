@@ -7,9 +7,9 @@ from tarviz.widgets import sidebar_widget, filter, modulation_plot, \
 from tarviz.constants import ANNOTATION_FEATURES
 
 top_page_widget()
-mt_method, pvalue = sidebar_widget()
+results_file, pval_col, pvalue, param_type = sidebar_widget()
 bqtls_data = bQTLs_data()
-data = filter(load_data(bqtls_data), mt_method, pvalue, "None", "None", "None")
+data = filter(load_data(bqtls_data, results_file), pval_col, pvalue, "None", "None", param_type)
 
 bqtl_str = st.selectbox("Select bQTL (# Trait hits)", bqtls_hit_counts(data))
 bqtl = bqtl_str.split(" (")[0]
@@ -49,7 +49,7 @@ for (tab, feature) in zip(tabs, features):
 st.header(f"TarGene Hits")
 st.markdown("Please select an estimation result to display further information (this may take a few seconds):")
 
-bqtl_data = filter(data, mt_method, pvalue, "None", "None", bqtl)
+bqtl_data = filter(data, pval_col, pvalue, "None", bqtl, param_type)
 builder = GridOptionsBuilder.from_dataframe(bqtl_data)
 builder.configure_selection(selection_mode='single', use_checkbox=True, pre_selected_rows=[0])
 builder.configure_pagination(enabled=True, paginationAutoPageSize=False, paginationPageSize=10)

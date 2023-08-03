@@ -43,7 +43,7 @@ def columns(data):
 def main(args):
     st.session_state['nextflow_rundir'] = args.rundir
 
-    results_file, pval_col, pvalue = sidebar_widget()
+    results_file, pval_col, pvalue, param_type = sidebar_widget()
 
     data = load_data(bQTLs_data(), results_file)
 
@@ -64,7 +64,7 @@ def main(args):
     treatment_filter = treatment_from_selectbox if treatment_from_selectbox != "None" else treatment_from_text
 
     # Data Table
-    filtered = filter(data, pval_col, pvalue, target_filter, treatment_filter, "None")
+    filtered = filter(data, pval_col, pvalue, target_filter, treatment_filter, param_type)
     col21.markdown("Only first 1000 results are presented.")
     col21.dataframe(limit_data(filtered).style.hide(axis='index'), use_container_width=True)
     # Hits per Target/Treatment
