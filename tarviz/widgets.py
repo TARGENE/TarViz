@@ -251,7 +251,7 @@ def region_annotations(chr, v_start, v_end, distance, features):
 @st.cache_data
 def plot_motif_logo(json_response, pmin, pmax):
     bm_df = pd.DataFrame([json_response['elements'][str(i)] 
-                          for i in range(1,json_response['length'])])
+                          for i in range(1, json_response['length'] + 1)])
     logo = logomaker.Logo(bm_df)
     logo.highlight_position_range(pmin=pmin, pmax=pmax, color='gold', alpha=.5)
     logo.ax.set_title(
