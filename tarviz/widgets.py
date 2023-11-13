@@ -140,7 +140,7 @@ def continuous_ATE_plot(raw_data, bqtl, trait):
     )
     return fig
 
-@st.cache_data
+"""@st.cache_data
 def modulation_plot(bqtl, selected):
     trait = selected["TARGET"]
     param_type = selected["PARAMETER_TYPE"]
@@ -189,7 +189,7 @@ def modulation_plot(bqtl, selected):
             else:
                 fig = continuous_ATE_plot(raw_data, bqtl, trait)
         
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)"""
 
 def location_from_str(location_str):
     chr, start_end = location_str.split(":")
@@ -199,8 +199,10 @@ def location_from_str(location_str):
 @st.cache_data
 def SNPinfo(rsid, bqtls_data):
     response = http_variant_info(rsid)
+    st.write(response)
     mapping_1 = response["mappings"][0]
     variant_row = bqtls_data[bqtls_data.ID == rsid].iloc[0]
+    st.write(bqtls_data[bqtls_data.ID == rsid])
     chr, start, end = location_from_str(mapping_1["location"])
     if variant_row["REF.counts"] > variant_row["ALT.counts"]:
         binding_allele = variant_row.REF + " (" + str(variant_row["REF.counts"]) + ")"

@@ -6,10 +6,12 @@ from tarviz.widgets import sidebar_widget, filter, modulation_plot, \
     SNPinfo, region_annotations, top_page_widget, plot_motif_logo
 from tarviz.constants import ANNOTATION_FEATURES
 
+
 top_page_widget()
-mt_method, pvalue = sidebar_widget()
+results_file, mt_method, pvalue = sidebar_widget()
 bqtls_data = bQTLs_data()
-data = filter(load_data(bqtls_data), mt_method, pvalue, "None", "None", "None")
+data = filter(load_data(bqtls_data, results_file), mt_method, pvalue, "None", "None", "None")
+
 
 bqtl_str = st.selectbox("Select bQTL (# Trait hits)", bqtls_hit_counts(data))
 bqtl = bqtl_str.split(" (")[0]

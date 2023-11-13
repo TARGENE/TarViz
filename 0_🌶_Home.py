@@ -80,4 +80,3 @@ if __name__ == "__main__":
     parser.add_argument("rundir", type=str, default=".", help='Directory where the targene-pipeline was run from.')
     args = parser.parse_args()
     main(args)
-
