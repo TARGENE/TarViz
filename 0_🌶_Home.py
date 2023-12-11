@@ -42,6 +42,9 @@ def columns(data):
 
 def main(args):
     st.session_state['nextflow_rundir'] = args.rundir
+    
+
+    st.session_state['gtex_file'] = args.gtex_file
 
     results_file, pval_col, pvalue = sidebar_widget()
 
@@ -64,6 +67,7 @@ def main(args):
     treatment_filter = treatment_from_selectbox if treatment_from_selectbox != "None" else treatment_from_text
 
     # Data Table
+    st.write(data, pval_col, pvalue, target_filter, treatment_filter)
     filtered = filter(data, pval_col, pvalue, target_filter, treatment_filter, "None")
     col21.markdown("Only first 1000 results are presented.")
     col21.dataframe(limit_data(filtered).style.hide(axis='index'), use_container_width=True)
@@ -78,5 +82,7 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("rundir", type=str, default=".", help='Directory where the targene-pipeline was run from.')
+    parser.add_argument("gtex_file", type=str, default=".", help='GTEX file with bulk expression values.')
     args = parser.parse_args()
+
     main(args)

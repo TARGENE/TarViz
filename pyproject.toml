@@ -19,6 +19,7 @@ pytest = "^7.2.2"
 numpy = "^1.24.2"
 logomaker = "^0.8"
 matplotlib = "^3.7.1"
+tables = "^3.9"
 
 
 [build-system]

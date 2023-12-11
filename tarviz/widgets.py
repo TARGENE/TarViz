@@ -4,7 +4,7 @@ import numpy as np
 import plotly.express as px
 import logomaker
 from tarviz.constants import MT_ADJUSTEMENT_METHODS
-from tarviz.utils import raw_data_file, http_variant_info, http_ensemble_annotations
+from tarviz.utils import raw_data_file, http_variant_info, http_ensemble_annotations, look_up_variant_gtex
 
 def normal_approx_error(m, n):
     return 1.96 * np.sqrt(np.divide(m * (1 - m), n))
@@ -15,7 +15,7 @@ def top_page_widget():
     col2.image("images/logo.jpg")
 
 def sidebar_widget():
-    results_file = st.sidebar.text_input("Result's filename", value="permutation_summary.csv")
+    results_file = st.sidebar.text_input("Result's filename", value="summary.csv")
     column = st.sidebar.selectbox("P-value column", MT_ADJUSTEMENT_METHODS)
     pvalue = float(st.sidebar.text_input("Pvalue Threshold", value=0.05))
     return results_file, column, pvalue
@@ -27,19 +27,20 @@ def unique_treatments(data):
 @st.cache_data
 def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment_combo, treatment) -> pd.DataFrame:
     # Pvalue based filter
-    filterstring = f"(df.{pval_col} < {pvalue})"
-
+    filterstring = f"({pval_col} < {pvalue})"
     # Target based filter
     if target != "None":
-        filterstring += f" & (df.TARGET.str.contains(\"{target}\"))"
+        filterstring += f" & (TARGET.str.contains(\"{target}\"))"
     # Treatment combo based filter
     if treatment_combo != "None":
-        filterstring += f" & (df.TREATMENTS.str.contains(\"{treatment_combo}\"))"
+        filterstring += f" & (TREATMENTS.str.contains(\"{treatment_combo}\"))"
     # Treatment based filter
     if treatment != "None":
-        filterstring += f" & (df.TREATMENTS.str.contains(\"{treatment}\"))"
-    
-    return pd.eval(f"df[{filterstring}]")
+        filterstring += f" & (TREATMENTS.str.contains(\"{treatment}\"))"
+
+    st.write(filterstring)
+
+    return df.query(filterstring)
 
 def binary_IATE_plot(raw_data, bqtl, modulator, trait):
     means = raw_data.groupby([bqtl, modulator]).agg(
@@ -214,6 +215,8 @@ def SNPinfo(rsid, bqtls_data):
     basesnpinfo = {
         "Binding Allele (Counts)": binding_allele,
         "Non-Binding Allele (Counts)": non_binding_allele,
+        "REF Allele": variant_row.REF,
+        "ALT Allele": variant_row.ALT,
         "Chromosome": [chr],
         "Start": [start],
         "End": [end],
