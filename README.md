@@ -25,3 +25,8 @@ streamlit run 0_🌶_Home.py --server.port=6666 NEXTFLOW_RUNDIR
 ```
 
 where `NEXTFLOW_RUNDIR` is the TarGene pipeline's run directory.
+
+
+## Priority View Explanation
+
+Region size: 

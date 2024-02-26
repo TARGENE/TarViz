@@ -12,3 +12,5 @@ MT_ADJUSTEMENT_METHODS = ['TMLE_PVALUE', 'ONESTEP_PVALUE', "WF_QVALUE"]
 ENSEMBL_URL = "https://rest.ensembl.org"
 
 ANNOTATION_FEATURES = ["band", "gene", "transcript", "cds", "exon", "repeat", "simple", "misc", "variation", "somatic_variation", "structural_variation", "somatic_structural_variation", "constrained", "regulatory", "motif", "other_regulatory", "array_probe", "mane"]
+
+PRIORITY_FEATURES = ["gene" ,"regulatory", "trait", "V2G"]

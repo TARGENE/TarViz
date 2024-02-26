@@ -245,7 +245,58 @@ def SNPinfo(rsid, bqtls_data):
     return basesnpinfo
 
 @st.cache_data
+def SNPinfo_priority(rsid, bqtls_data):
+    response = http_variant_info(rsid)
+    #st.write(response)
+    mapping_1 = response["mappings"][0]
+    variant_row = bqtls_data[bqtls_data.ID == rsid].iloc[0]
+    st.write(bqtls_data[bqtls_data.ID == rsid])
+    chr, start, end = location_from_str(mapping_1["location"])
+    if variant_row["REF.counts"] > variant_row["ALT.counts"]:
+        binding_allele = variant_row.REF + " (" + str(variant_row["REF.counts"]) + ")"
+        non_binding_allele = variant_row.ALT + " (" + str(variant_row["ALT.counts"]) + ")"
+    else:
+        non_binding_allele = variant_row.REF + " (" + str(variant_row["REF.counts"]) + ")"
+        binding_allele = variant_row.ALT + " (" + str(variant_row["ALT.counts"]) + ")"
+    
+    basesnpinfo = {
+        "RSID": rsid,
+        "Binding Allele (Counts)": binding_allele,
+        "Non-Binding Allele (Counts)": non_binding_allele,
+        "REF Allele": variant_row.REF,
+        "ALT Allele": variant_row.ALT,
+        "Chromosome": [chr],
+        "Start": [start],
+        "End": [end],
+        "Strand": [mapping_1["strand"]],
+        "Ensembl Alleles": [mapping_1["allele_string"]],
+        "Ensembl Minor Allele": [response["minor_allele"]],
+        "Ensembl MAF": [response["MAF"]],
+        "Ensembl Ancestral Allele": [mapping_1["ancestral_allele"]],
+    }
+    """hide_table_row_index = 
+            <style>
+            thead tr th:first-child {display:none}
+            tbody th {display:none}
+            </style>
+            """
+    #st.markdown(hide_table_row_index, unsafe_allow_html=True)
+    priority = pd.DataFrame(basesnpinfo)
+
+
+    
+    return  priority
+
+@st.cache_data
 def region_annotations(chr, v_start, v_end, distance, features):
+    response = http_ensemble_annotations(
+        chr, v_start, v_end, 
+        distance=distance, 
+        features=features
+        )
+    return pd.DataFrame(response)
+
+def proregion_annotations(chr, v_start, v_end, distance, features):
     response = http_ensemble_annotations(
         chr, v_start, v_end, 
         distance=distance, 

@@ -32,7 +32,7 @@ for (tab, feature) in zip(tabs, features):
     variant_code_b38_ref_alt = str(basesnpinfo["Chromosome"][0])+"_"+str(basesnpinfo["Start"][0])+"_"+str(basesnpinfo["REF Allele"][0])+"_"+str(basesnpinfo["ALT Allele"][0])
     annotations = region_annotations(chr, v_start, v_end, distance, (feature,))
 
-'''    with tab:
+    with tab:
         if len(annotations) > 0:
             annotations = feature_columns(annotations, feature)
             st.markdown("Highlighted rows correspond to regions containing the variant.")
@@ -63,7 +63,7 @@ st.dataframe(open_targets_df(variant_code_b38_ref_alt))
 
 
 st.subheader("Open Targets PheWas")
-st.dataframe(phewas(variant_code_b38_ref_alt))'''
+st.dataframe(phewas(variant_code_b38_ref_alt))
 
 st.header("GTEx expression")
 gtex, selection_tissue = look_up_variant_gtex_tissue(variant_code_b38_ref_alt) 

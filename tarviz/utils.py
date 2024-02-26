@@ -181,11 +181,13 @@ def open_targets_v2g(variantId):
           sourceId
           aggregatedScore
           tissues {
-            distance
+          distance
           }
+     
         }
       }
     }"""
+    # You removed tissues{distance}
     # Set base URL of GraphQL API endpoint
     base_url = "https://api.genetics.opentargets.org/graphql"
     # Set variables object of arguments to be passed to endpoint
@@ -260,6 +262,7 @@ def OT_phewas(variant_code_b38_ref_alt):
             nCases
             eaf
             se
+            
             }
         }
     }"""
