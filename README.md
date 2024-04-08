@@ -18,7 +18,7 @@ ssh -fNL 8501:localhost:8501 <Eddie node>
 or
 
 ```
-ssh -fN <UUN>@node2c17 -J <UUN>@eddie.ecdf.ed.ac.uk -L 8501:localhost:8501
+ssh -fN <UUN>@<Eddie_node> -J <UUN>@eddie.ecdf.ed.ac.uk -L 8501:localhost:8501
 ```
 where <Eddie_node> is the node where the app will be running and is described in the ssh config file.
 
