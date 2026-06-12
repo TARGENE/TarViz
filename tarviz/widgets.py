@@ -25,12 +25,12 @@ def unique_treatments(data):
     st.selectbox("Treatment", [t for x in data.TREATMENTS for t in x.split("_&_")])
 
 @st.cache_data
-def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment_combo, treatment) -> pd.DataFrame:
+def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment, treatment_combo) -> pd.DataFrame:
     # Pvalue based filter
     filterstring = f"({pval_col} < {pvalue})"
     # Target based filter
     if target != "None":
-        filterstring += f" & (TARGET.str.contains(\"{target}\"))"
+        filterstring += f" & (OUTCOME.str.contains(\"{target}\"))"
     # Treatment combo based filter
     if treatment_combo != "None":
         filterstring += f" & (TREATMENTS.str.contains(\"{treatment_combo}\"))"
@@ -38,18 +38,17 @@ def filter(df: pd.DataFrame, pval_col, pvalue, target, treatment_combo, treatmen
     if treatment != "None":
         filterstring += f" & (TREATMENTS.str.contains(\"{treatment}\"))"
 
-    st.write(filterstring)
 
     return df.query(filterstring)
 
-def binary_IATE_plot(raw_data, bqtl, modulator, trait):
-    means = raw_data.groupby([bqtl, modulator]).agg(
+def binary_IATE_plot(raw_data, bqtl, trait):
+    means = raw_data.groupby([bqtl ]).agg(
         mean=(trait, np.mean),
         count=(trait, np.size),
         ncases=(trait, np.sum)
     ).reset_index()
     means["Error"] = normal_approx_error(means["mean"], means["count"])
-    means[modulator] = means[modulator].astype(str)
+    #means[modulator] = means[modulator].astype(str)
     fig = px.scatter(
         means, 
         error_y="Error",
@@ -60,9 +59,9 @@ def binary_IATE_plot(raw_data, bqtl, modulator, trait):
         labels={
                 "mean": f"{trait} mean",
                 bqtl: f"{bqtl} (# minor alleles)",
-                modulator: f"{modulator} (# minor alleles)"
+                #modulator: f"{modulator} (# minor alleles)"
         },
-        title=f"{bqtl}'s modulation by {modulator} (from raw data).<br><sup>Error bars are based on the Normal approximation.</sup>",
+        #title=f"{bqtl}'s modulation by {modulator} (from raw data).<br><sup>Error bars are based on the Normal approximation.</sup>",
         color_discrete_sequence=["red", "blue"]
         )
     fig.update_layout(
@@ -199,6 +198,7 @@ def location_from_str(location_str):
 
 @st.cache_data
 def SNPinfo(rsid, bqtls_data):
+    print(rsid)
     response = http_variant_info(rsid)
     st.write(response)
     mapping_1 = response["mappings"][0]

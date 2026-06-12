@@ -61,46 +61,25 @@ for (tab, feature) in zip(tabs, features):
 # OpenTargets V2G
 
 st.header("Open Targets")
-st.subheader("Open Targets Locus to Gene")
+st.subheader("Open Targets V2G")
 st.dataframe(open_targets_df(variant_code_b38_ref_alt))
 
 
 st.subheader("Open Targets PheWas")
-st.write( """
-        The description of fields for the PheWAS can be found here: 
-        
-        traitReported   - Trait described in source
-        pmid            - pubmedId
-        pubDate         - Publication date
-        pubAuthor       - First author on publication
-        traitCategory   - Category of trait
-        source          - Project ID
-
-         
-         
-        Stats:
-        pval            - pValueMantissa + pValueExponent
-        beta            - beta     
-        oddsRatio       - Often derived from beta but no standard description 
-        nTotal          - Number of individuals
-        eaf             - Frequency of the Effect Allele
-        se              - SE""")
 st.dataframe(phewas(variant_code_b38_ref_alt))
 
-
 st.header("GTEx expression")
-
-gtex, selection_tissue= look_up_variant_gtex_tissue(variant_code_b38_ref_alt) 
-
-selection_tissue = selection_tissue.drop([ "RE", "RE2", "FE", "Q", "BE", "SQUARE"]).dropna()
+gtex, selection_tissue, = look_up_variant_gtex_tissue(variant_code_b38_ref_alt) 
+st.write(selection_tissue)
 
 
 
 selection_tissue = st.selectbox("Select tissue",selection_tissue)
 
-tissue  = look_up_variant_gtex(gtex, variant_code_b38_ref_alt, selection_tissue)
+tissue = look_up_variant_gtex(gtex, variant_code_b38_ref_alt, selection_tissue)
 
-merged= merging_gtex(gtex[ ["VARIANT", "ENSEMBL"]], tissue)
+new_columns, merged = merging_gtex(gtex[ ["VARIANT", "ENSEMBL"]], tissue)
+
 
 st.dataframe(merged)
 

@@ -9,8 +9,9 @@ from argparse import ArgumentParser
 st.set_page_config(layout="wide", page_icon="images/logo.ico")
 
 @st.cache_data
+
 def target_options(data):
-    return ["None", *data.TARGET.unique()]
+    return ["None", *data.OUTCOME.unique()]
 
 def treatment_options(data):
     return ["None", *data.TREATMENTS.unique()]
@@ -46,15 +47,20 @@ def main(args):
 
     st.session_state['gtex_file'] = args.gtex_file
 
+
     results_file, pval_col, pvalue = sidebar_widget()
 
-    data = load_data(bQTLs_data(), results_file)
+
 
     # Title
     top_page_widget()
 
     st.markdown("Welcome to the TarGene visualization interface.")
+
+    data = load_data(bQTLs_data(), results_file)
+
     # Display the table
+    st.header("Data based on filter options")
     col21, colr22 = st.columns([2, 1])
     col211, col212 = col21.columns(2)
 
@@ -67,14 +73,16 @@ def main(args):
     treatment_filter = treatment_from_selectbox if treatment_from_selectbox != "None" else treatment_from_text
 
     # Data Table
-    st.write(data, pval_col, pvalue, target_filter, treatment_filter)
+
+    #st.write(data, pval_col, pvalue, target_filter)
     filtered = filter(data, pval_col, pvalue, target_filter, treatment_filter, "None")
     col21.markdown("Only first 1000 results are presented.")
     col21.dataframe(limit_data(filtered).style.hide(axis='index'), use_container_width=True)
     # Hits per Target/Treatment
-    per = colr22.multiselect("Hit counts", ["TREATMENTS", "TARGET"], default=["TREATMENTS"])
-    nhits = filtered.groupby(per).size().reset_index(name='COUNTS').sort_values("COUNTS", ascending=False)
-    colr22.dataframe(nhits.style.hide(axis='index'))
+    per = colr22.multiselect("Hit counts", ["OUTCOME"], default=[])
+
+    #nhits = filtered.groupby(per).size().reset_index(name='COUNTS').sort_values("COUNTS", ascending=False)
+    #colr22.dataframe(nhits.style.hide(axis='index'))
     # Plot Pvalues
     scale = st.selectbox("Scale", ["None", "log"])
     pvalues_hist(filtered, scale, pval_col)
