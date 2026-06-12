@@ -242,7 +242,6 @@ def open_targets_v2g(variantId):
 #        }
 #      }
  #   }"""
-    # You removed tissues{distance}
     # Set base URL of GraphQL API endpoint
 #   base_url = "https://api.genetics.opentargets.org/graphql"
     # Set variables object of arguments to be passed to endpoint
@@ -519,6 +518,7 @@ PheWAS query
     if not rows:
         return pd.DataFrame()
 
+
     records = []
     for cs in rows:
         study = cs.get("study") or {}
@@ -529,20 +529,20 @@ PheWAS query
             trait_category = diseases[0]["therapeuticAreas"][0].get("name")
 
         records.append({
-            # Study identifiers
+            
             "studyId":          study.get("id"),
-            "traitReported":    study.get("traitFromSource"),   # renamed
+            "traitReported":    study.get("traitFromSource"),   
             "traitCategory":    trait_category,
-            "pubAuthor":        study.get("publicationFirstAuthor"),  # renamed
-            "pubDate":          study.get("publicationDate"),         # renamed
-            "pmid":             study.get("pubmedId"),                # renamed
-            "source":           study.get("projectId"),               # closest equivalent
-            "nTotal":           study.get("nSamples"),                # approx equivalent
-            # Association statistics
-            "pValueMantissa":   cs.get("pValueMantissa"),   # NOTE: pval is now split
-            "pValueExponent":   cs.get("pValueExponent"),   # combine: mantissa * 10^exponent
+            "pubAuthor":        study.get("publicationFirstAuthor"),  
+            "pubDate":          study.get("publicationDate"),        
+            "pmid":             study.get("pubmedId"),               
+            "source":           study.get("projectId"),              
+            "nTotal":           study.get("nSamples"),               
+            
+            "pValueMantissa":   cs.get("pValueMantissa"),   
+            "pValueExponent":   cs.get("pValueExponent"),   
             "beta":             cs.get("beta"),
-            "eaf":              cs.get("effectAlleleFrequencyFromSource"),  # renamed
+            "eaf":              cs.get("effectAlleleFrequencyFromSource"),  
             "se":               cs.get("standardError"),
             "finemappingMethod": cs.get("finemappingMethod"),
             "studyLocusId":     cs.get("studyLocusId"),

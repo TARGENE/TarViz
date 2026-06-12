@@ -61,7 +61,7 @@ for (tab, feature) in zip(tabs, features):
 # OpenTargets V2G
 
 st.header("Open Targets")
-st.subheader("Open Targets Locus to Gene")
+st.subheader("Open Targets Locus to Gene Info")
 st.dataframe(open_targets_df(variant_code_b38_ref_alt))
 
 
@@ -74,10 +74,8 @@ st.write( """
         pubDate         - Publication date
         pubAuthor       - First author on publication
         traitCategory   - Category of trait
-        source          - Project ID
+        source          - Project ID or cohort ID
 
-         
-         
         Stats:
         pval            - pValueMantissa + pValueExponent
         beta            - beta     
