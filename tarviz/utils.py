@@ -461,7 +461,7 @@ def open_targets_df(variant_code_b38_ref_alt):
 @st.cache_data
 def phewas(variant_code_b38_ref_alt):
     """
-PheWAS style query
+PheWAS query
     """
     query_string = """
     query PheWASQuery($variantId: String!, $size: Int!, $index: Int!) {
@@ -523,7 +523,7 @@ PheWAS style query
     for cs in rows:
         study = cs.get("study") or {}
         diseases = study.get("diseases") or []
-        # Flatten trait categories (first disease, first therapeutic area)
+       
         trait_category = None
         if diseases and diseases[0].get("therapeuticAreas"):
             trait_category = diseases[0]["therapeuticAreas"][0].get("name")
@@ -550,7 +550,7 @@ PheWAS style query
 
     df = pd.DataFrame(records)
 
-    # Reconstruct a pval float column to match old API behaviour
+
     df["pval"] = df["pValueMantissa"] * (10.0 ** df["pValueExponent"].astype(float))
 
     return df
